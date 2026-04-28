@@ -1,0 +1,36 @@
+# =========================
+# Global / Monorepo ignores
+# =========================
+
+# dependencies (safety net)
+**/node_modules
+
+# env files (IMPORTANT)
+**/.env
+**/.env.*
+!.env.example
+
+# logs
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+
+# OS files
+.DS_Store
+
+# build outputs (safety net)
+**/dist
+**/build
+**/.next
+**/out
+
+# Prisma (backend safety net)
+**/src/generated/prisma
+
+# TypeScript
+**/*.tsbuildinfo
+
+# IDE
+.vscode
+.idea

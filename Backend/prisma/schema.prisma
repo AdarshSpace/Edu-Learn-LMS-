@@ -1,0 +1,221 @@
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id            String    @id
+  name          String    @db.Text
+  email         String
+  emailVerified Boolean   @default(false)
+  role          Role      @default(STUDENT)
+  image         String?   @db.Text
+
+  createdCourses Course[]
+  purchases      Purchase[]
+  payments       Payment[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?  @db.Text
+  userAgent String?  @db.Text
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId(length: 191)])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String    @db.Text
+  providerId            String    @db.Text
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @db.Text
+  refreshToken          String?   @db.Text
+  idToken               String?   @db.Text
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?   @db.Text
+  password              String?   @db.Text
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId(length: 191)])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String   @db.Text
+  value      String   @db.Text
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier(length: 191)])
+  @@map("verification")
+}
+
+
+
+model Course {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @db.Text
+  thumbnail   String?
+  price       Decimal  @db.Decimal(10, 2)
+
+  isPublished Boolean  @default(false)
+
+  teacherId   String
+  teacher     User     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  modules     Module[]
+
+  purchases   Purchase[]
+  payments    Payment[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([teacherId])
+  @@map("courses")
+}
+
+model Module {
+  id         String   @id @default(cuid())
+  title      String
+  position   Int
+
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  lessons    Lesson[]
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // no duplicate module order in same course
+  @@unique([courseId, position])
+
+  @@index([courseId])
+  @@map("modules")
+}
+
+model Lesson {
+  id         String   @id @default(cuid())
+  title      String
+  position   Int
+
+  moduleId   String
+  module     Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  videos     Video[]
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // no duplicate lesson order in same module
+  @@unique([moduleId, position])
+
+  @@index([moduleId])
+  @@map("lessons")
+}
+
+model Video {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+
+  videoUrl    String
+  duration    Int?     // seconds
+  position    Int
+
+  isPreview   Boolean  @default(false)
+
+  lessonId    String
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // no duplicate video order in same lesson
+  @@unique([lessonId, position])
+
+  @@index([lessonId])
+  @@map("videos")
+}
+
+model Purchase {
+  id          String   @id @default(cuid())
+
+  userId      String
+  courseId    String
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  purchasedAt DateTime @default(now())
+
+  // one user can buy one course only once
+  @@unique([userId, courseId])
+
+  @@index([courseId])
+  @@map("purchases")
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+
+  amount        Decimal       @db.Decimal(10, 2)
+  provider      String        // razorpay, stripe
+  transactionId String?       @unique
+  status        PaymentStatus @default(PENDING)
+
+  userId        String
+  courseId      String
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course        Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([courseId])
+  @@map("payments")
+}
