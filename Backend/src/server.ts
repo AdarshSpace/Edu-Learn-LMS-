@@ -1,9 +1,13 @@
 import "dotenv/config";
 
 import express from 'express';
-import authRoutes from './routes/authRoutes.js';
-import videoRoutes from './routes/videoRoutes.js';
 import cors from 'cors';
+
+import authRoutes from './routes/authRoutes.js';
+
+import courseRoutes from './routes/courseRoutes.js';
+import videoRoutes from './routes/videoRoutes.js';
+
 
 const corsOptions = {
     origin: process.env.Frontend_URL,    // Frontend URL
@@ -21,6 +25,8 @@ app.use(express.urlencoded({ extended: true }));
 
 
 app.use("/api/auth", authRoutes);
+
+app.use("/api/course", courseRoutes);
 app.use("/api/video", videoRoutes);
 
 

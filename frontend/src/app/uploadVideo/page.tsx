@@ -1,52 +1,14 @@
-"use client";
+"use client"
+import fileUpload from "@/Components/upload/fileUpload";
+import {upload} from "@imagekit/next"
 
-import { useState } from 'react';
-import { upload } from "@imagekit/next";
 
-interface FileUploadProps {
-    onsuccess: (res: any) => void;
-    onProgress: (progress: number) => void;
-    onFileSelect: (file: File) => void;
-    fileType?: "video";
-  }
+function UploadVideo() {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return
 
-  const FileUpload = ({ onsuccess, onProgress, onFileSelect, fileType }: FileUploadProps) => {
-    const [uploading, setUploading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-  
-    const validateFile = (file: File): boolean => {
-      if (fileType === "video" && file.type !== "video/*") {
-        setError("Please upload a valid video file");
-        return false;
-      }
-  
-      if (fileType === "video" && !file.type.startsWith("video/")) {
-        setError("Please upload a valid Video file");
-        return false;
-      }
-  
-      if (file.size > 200 * 1024 * 1024) {
-        setError("File size must be less than 200 MB");
-        return false;
-      } 
-  
-      return true;
-    };
-  
-    const handleFileChange = async (
-      e: React.ChangeEvent<HTMLInputElement>
-    ) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-  
-      setError(null);
-  
-      onFileSelect(file); // pass file to parent
-      if (!validateFile(file)) return;
-  
-      setUploading(true);
-  
-      try {
+        try {
           
         // Ask backend for ImageKit auth
         const authRes = await fetch("http://localhost:3000/api/video/auth");
@@ -59,7 +21,7 @@ interface FileUploadProps {
         const res = await upload({
           file,
           fileName: file.name,
-          publicKey: process.env.NEXT_PUBLIC_PUBLIC_KEY!,
+          publicKey: data.publicKey,
           expire: data.expire,
           token: data.token,
           signature: data.signature,
@@ -68,12 +30,14 @@ interface FileUploadProps {
               const percent = Math.round(
                 (event.loaded / event.total) * 100
               );
-              onProgress(percent);
+            //   onProgress(percent);
             }
           },
         });
+
+        console.log('Uploaded video : ', res);
   
-        await fetch("/api/video/upload", {
+       const uploadRes = await fetch("http://localhost:3000/api/video/upload", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -87,30 +51,40 @@ interface FileUploadProps {
             thumbnailUrl: res.thumbnailUrl
           }),
         });
+
+        const uploadData = await uploadRes.json();
+        console.log('Upload response : ', uploadData);
+
   
-        onsuccess(res);
+        // onsuccess(res);
       } catch (err) {
         console.log("Upload failed:", err);
-        setError("Upload failed. Please try again.",);
-      } finally {
-        setUploading(false);
+      } 
+    }
+    const filePath = "_4321_demo_sample_i-UcPbrSb.mp4";
+    function generateVideoEmbedUrl(filePath: string) {
+        const imagekitId = "wn1n04z05";
+      
+        return `https://imagekit.io/player/embed/${imagekitId}/${filePath}/ik-master.m3u8?controls=true&autoplay=false&tr=sr-240_360_480_720_1080_2160`;
       }
-    };
-  
-    return (
-      <>
-        <input
-          type="file"
-          accept={
-            fileType === "video" ? "video/mp4" : "video/*"
-          }
-          onChange={handleFileChange}
-        />
-  
-        {uploading && <span>Uploading...</span>}
-        {error && <p style={{ color: "red" }}>{error}</p>}
-      </>
-    );
-  };
 
-  export default FileUpload;
+  return (
+    <div>
+      <h1>Upload Video</h1>
+      <input
+        type="file"
+        accept="video/*"
+        onChange={handleFileChange}
+      />
+
+      <iframe width="560" height="315" src="https://imagekit.io/player/embed/wn1n04z05/_4321_demo_sample_i-UcPbrSb.mp4/ik-master.m3u8?controls=true&autoplay=false&loop=false&background=%23000000&updatedAt=1777432856092&thumbnail=https%3A%2F%2Fik.imagekit.io%2Fwn1n04z05%2F_4321_demo_sample_i-UcPbrSb.mp4%2Fik-thumbnail.jpg%3FupdatedAt%3D1777432856092&tr=sr-240_360_480_720_1080_2160" title="ImageKit video player"  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"> </iframe>
+            <iframe width="560" height="315" src="https://ik.imagekit.io/wn1n04z05/1st_scene_3PXR-zsDZ.mp4" title="ImageKit video player" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"> </iframe>
+            <iframe width={560} height={315} src={generateVideoEmbedUrl(filePath)} style={{ border: "10px solid #d1fae5"}} title="ImageKit video player"  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"> </iframe>
+
+            
+    </div>
+
+  );
+}
+
+export default UploadVideo;

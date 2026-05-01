@@ -12,7 +12,7 @@ export const generateUploadAuth = (req: Request, res: Response) => {
 }
 
 export const uploadVideo = (req: Request, res: Response) => {
-    const { file } = req.body;
-    console.log('File : ',file);
+    const {  title, fileId, fileName, fileUrl, fileSize, } = req.body;
+    console.log('Title : ',title, '  File ID : ',fileId, '  File Name : ',fileName, '  File URL : ',fileUrl, '  File Size : ',fileSize);
     res.send({message: 'Video uploaded successfully'});
 }
