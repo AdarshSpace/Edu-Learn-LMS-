@@ -8,7 +8,7 @@ export const createCourse = async (req: Request, res: Response) => {
     const teacherId = req.user.id; // from auth middleware
 
     // Validation
-    if (!title || !description || !price || !oldPrice || !category) {
+    if (!title || !description || !price || !oldPrice || !category || !thumbnail) {
       return res.status(400).json({
         success: false,
         message: "Required fields are missing",

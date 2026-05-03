@@ -1,5 +1,7 @@
+import Link from "next/link";
+
 type Props = {
-    icon: string;
+    id: string;
     category: string;
     title: string;
     students: string;
@@ -10,7 +12,6 @@ type Props = {
 
   
   export default function CourseCard({
-    icon,
     category,
     title,
     students,
@@ -19,7 +20,8 @@ type Props = {
     image,
   }: Props) {
     return (
-      <div className="group relative  bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-2xl p-5  hover:border-slate-300/60 hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 flex flex-col justify-between cursor-pointer hover:-translate-y-1 ">
+        <Link href='/payment' className="block">
+                <div className="group relative  bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-2xl p-5  hover:border-slate-300/60 hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 flex flex-col justify-between cursor-pointer hover:-translate-y-1 ">
         <div className="h-50 hover:bg-emerald-50 flex items-center justify-center text-5xl">
           <img src={image} className="w-full h-full object-cover rounded-lg " />
         </div>
@@ -55,5 +57,6 @@ type Props = {
           </div>
         </div>
       </div>
+        </Link>
     );
   }
